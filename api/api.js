@@ -1,11 +1,9 @@
 exports.route = function(app) {
-    app.namespace('/admin', function(){
-	app.post('/new', function(req, res){
-	    res.send('admin new');
-	});
+    var api_list = ['admin', 'course', 'student', 'mark', 'auth']
 
-	app.post('/get', function(req, res){
-	    res.send('admin get');
-	});
-    });
-};
+    for (var i = 0; i < api_list.length; i++) {
+	var api_name = api_list[i]
+	var obj = require('./' + api_name)
+	app.namespace('/'+api_name, function() { obj.route(app) })
+    }
+}
