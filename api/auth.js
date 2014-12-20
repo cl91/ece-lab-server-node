@@ -1,6 +1,6 @@
 var db = require('redis').createClient();
 
-exports.new = function(req, res){
+exports.handler = function(req, res){
     var name = req.query.name
     var pass = req.query.pass
     if (!name || !pass) {

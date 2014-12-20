@@ -24,6 +24,8 @@ var handler = function(req, res) {
 	var ops = req.params.ops
 	if (is_function(obj[ops])) {
 	    obj[ops](req, res)
+	} else if (is_function(obj['handler'])) {
+	    obj['handler'](req, res)
 	} else {
 	    res.status(400).end('Invalid request ' + req.path)
 	}
@@ -38,6 +40,6 @@ var handler = function(req, res) {
     }
 }
 
-router.post('/api/:api/:ops', handler)
+router.post(['/api/:api/:ops?', '/api/:api/:param/:ops'], handler)
 
 module.exports = router
