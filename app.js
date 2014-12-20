@@ -22,7 +22,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.namespace('/api', function() { api.route(app) });
+app.use(require('./api/auth').middleware);
+app.use(api);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
