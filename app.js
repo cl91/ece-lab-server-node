@@ -7,13 +7,13 @@ var bodyParser = require('body-parser');
 
 var app = express();
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
+// uncomment after placing your favicon in /web
+//app.use(favicon(__dirname + '/web/favicon.ico'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'web')));
 
 app.use(require('./api/auth').middleware);
 app.use(require('./api/api'));
