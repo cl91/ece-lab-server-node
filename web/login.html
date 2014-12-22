@@ -17,7 +17,7 @@
 
 	    <h1 class="text-center">ECE Lab Management System</h1>
 
-	    <form class="form-signin" role="form">
+	    <form class="form-signin" role="form" id="login">
 		<h2 class="form-signin-heading">Please log in</h2>
 		<label for="username" class="sr-only">User</label>
 		<input type="text" id="username" class="form-control"
@@ -31,5 +31,11 @@
 
 	<script src="js/jquery.min.js"></script>
 	<script src="js/bootstrap.min.js"></script>
+	<script src="js/jquery.form.js"></script>
+	<script>
+	 $('#login').ajaxForm(function() {
+	     document.location = 'admin.html'
+	 })
+	</script>
     </body>
 </html>
