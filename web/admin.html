@@ -46,19 +46,32 @@
 			</div>
 		    </div>
 		</div>
-		<ul class="list-group lead">
-		    <li class="list-group-item">
-			<a href="course-coordinator.html">Duleepa (dpla123)</a>
-		    </li>
-		    <li class="list-group-item">
-			<a href="course-coordinator.html">Nasser (ngia005)</a>
-		    </li>
-
-		</ul>
+		<ul class="list-group lead" id="admin-list"></ul>
 	    </div>
 	</div>
 
 	<script src="js/jquery.min.js"></script>
 	<script src="js/bootstrap.min.js"></script>
+
+	<script>
+	 $.ajax({
+	     url : 'api/admin/get',
+	     type : 'POST',
+	     dataType : 'json',
+	     success : function(data) {
+		 for (var i = 0; i < data.length; i++) {
+		     var obj = data[i]
+		     var name = obj.name
+		     var fullname = obj.fullname ? obj.fullname : name
+		     var html = '<li class="list-group-item"><a href="course-coordinator.html?name=' +
+				name + '">' + fullname + ' (' + name + ')</a></li>'
+		     $('#admin-list').append(html)
+		 }
+	     },
+	     error : function(jqxhr, status, error) {
+		 alert(error)
+	     }
+	 })
+	</script>
     </body>
 </html>
