@@ -43,8 +43,16 @@
 		 $.ajax({
 		     url : url,
 		     type : 'POST',
+		     dataType : 'json',
 		     success : function(data) {
-			 document.location = 'admin.html'
+			 if (data.type == 'superadmin') {
+			     document.location = 'admin.html'
+			 } else if (data.type == 'admin') {
+			     document.location = 'course-coordinator.html'
+			 } else {
+			     $('#error').show()
+			     $('#error').text('Login failed: unknown user type')
+			 }
 		     },
 		     error : function(jqxhr, status, error) {
 			 $('#error').show()

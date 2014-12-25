@@ -30,12 +30,22 @@ exports.handler = function(req, res){
 	    db.hset('user:'+name, 'auth', randomstring)
 	    db.hset('auth', randomstring, name)
 	    res.cookie('auth', randomstring)
-	    res.send(randomstring)
+	    var reply_obj = { auth : randomstring }
+	    db.hget('user:'+name, 'type', function(err, reply) {
+		if (reply) {
+		    reply_obj.type = reply
+		}
+		res.send(JSON.stringify(reply_obj))
+	    })
 	})
     })
 }
 
 exports.middleware = function(req, res, next) {
+    if (!(req.path.lastIndexOf('/api') === 0) || (req.path.lastIndexOf('/api/auth') === 0)) {
+	return next()
+    }
+
     var db = require('redis').createClient();
 
     var auth = req.query.auth
@@ -49,7 +59,9 @@ exports.middleware = function(req, res, next) {
 		    res.locals.user = user
 		    next()
 		} else {
-		    res.status(401).end('Invalid authentication token')
+		    var err = new Error('Invalid authentication token')
+		    err.status = 401
+		    return next(err)
 		}
 	    })
 	} else {

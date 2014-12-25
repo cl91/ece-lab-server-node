@@ -25,6 +25,10 @@ body {
     padding-bottom: 16px;
 }
 
+.course-list {
+    padding-left: 16px
+}
+
 .course-coordinators {
     padding-left: 32px;
 }
@@ -53,4 +57,8 @@ body {
 
 .add-new-alias::after {
     content: "]"
+}
+
+.delete-admin {
+    margin-left: 12px;
 }

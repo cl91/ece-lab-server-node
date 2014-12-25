@@ -33,11 +33,13 @@ exports['new-marker'] = function(req, res) {
 	if (reply == 0) {
 	    db.sadd('users', name)
 	    db.hset('user:'+name, 'pass', name)
+	    db.hset('user:'+name, 'type', 'marker')
 	    db.sadd('user:'+name+':courses', course)
 	}
     })
     db.sadd('course:'+course+':markers', name, function(err, reply) {
 	if (reply == 1) {
+	    db.hset('user:'+name, 'type', 'marker')
 	    res.send('Added marker ' + name + ' for course ' + course)
 	} else {
 	    res.status(500).send('Failed to add marker ' + marker + ' for course ' + course)

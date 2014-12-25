@@ -1,8 +1,7 @@
-var express = require('express')
-var router = express.Router()
-
-router.get('/', function(req, res) {
-    res.redirect('login.html')
-})
-
-module.exports = router
+module.exports = function (req, res, next) {
+    if (req.path == '/') {
+	res.redirect('login.html')
+    } else {
+	next()
+    }
+}

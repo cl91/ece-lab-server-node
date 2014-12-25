@@ -13,12 +13,11 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'web')));
 
 app.use(require('./api/auth').middleware);
 app.use(require('./api/api'));
-
 app.use(require('./redirect'))
+app.use(express.static(path.join(__dirname, 'web')));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

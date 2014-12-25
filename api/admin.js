@@ -3,30 +3,41 @@ var db = require('redis').createClient()
 exports.new = function(req, res) {
     var name = req.query.name;
     var pass = req.query.pass;
+    var fullname = req.query.fullname
     if (!name || !pass) {
 	res.status(400).send('Need admin name and password')
 	return
     }
-    db.sismember('admins', name, function(err, reply) {
-	if (reply == 1) {
-	    res.status(400).send('Admin ' + name + ' exists')
-	    return
+    db.hget('user:'+name, 'type', function(err, reply) {
+	if (!reply || reply == 'admin') {
+	    db.sismember('admins', name, function(err, reply) {
+		if (reply == 1) {
+		    res.status(400).send('Admin ' + name + ' exists')
+		    return
+		}
+		
+		db.sismember('users', name, function(err, reply) {
+		    if (reply == 0) {
+			db.sadd('users', name)
+			db.hset('user:'+name, 'pass', pass)
+			db.hset('user:'+name, 'type', 'admin')
+			if (fullname) {
+			    db.hset('user:'+name, 'fullname', fullname)
+			}
+		    }
+		})
+		
+		db.sadd('admins', name, function(err, reply) {
+		    if (reply == 1) {
+			res.send('Admin ' + name + ' added')
+		    } else {
+			res.status(501).send('Failed to add admin ' + name + ': ' + err)
+		    }
+		})
+	    })
+	} else if (reply) {
+	    res.status(400).send('User ' + name + ' exists')
 	}
-
-	db.sismember('users', name, function(err, reply) {
-	    if (reply == 0) {
-		db.sadd('users', name)
-		db.hset('user:'+name, 'pass', pass)
-	    }
-	})
-
-	db.sadd('admins', name, function(err, reply) {
-	    if (reply == 1) {
-		res.send('Admin ' + name + ' added')
-	    } else {
-		res.send('Failed to add admin ' + name + ': ' + err)
-	    }
-	})
     })
 }
 
@@ -44,6 +55,9 @@ exports.del = function(req, res) {
 
 	db.srem('admins', name, function(err, reply) {
 	    if (reply == 1) {
+		db.srem('users', name)
+		db.del('user:'+name)
+		db.del('user:'+name+':courses')
 		res.send('Admin ' + name + ' deleted')
 	    } else {
 		res.send('Failed to delete admin ' + name + ': ' + err)
@@ -54,12 +68,17 @@ exports.del = function(req, res) {
 
 exports.get = function(req, res) {
     function write_admin_info(name, admins, i, n) {
-	db.smembers(name+':courses', function(err, reply) {
+	db.smembers('user:'+name+':courses', function(err, reply) {
 	    var courses = reply ? reply : []
 	    admins[i] = { 'name' : name, 'courses' : courses }
-	    if (i == n-1) {
-		res.send(JSON.stringify(admins))
-	    }
+	    db.hget('user:'+name, 'fullname', function(err, reply) {
+		if (reply) {
+		    admins[i].fullname = reply
+		}
+		if (i == n-1) {
+		    res.send(JSON.stringify(admins))
+		}
+	    })
 	})
     }
 
