@@ -12,8 +12,83 @@ exports.new = function(req, res) {
 	    res.status(400).send('Course '+ name + ' exists')
 	    return
 	}
+	db.sadd('courses', name)
 	db.sadd(user+':courses', name)
 	res.send('Added course ' + name)
+    })
+}
+
+exports['get'] = function(req, res) {
+    var user = res.locals.user
+    db.smembers(user+':courses', function(err, reply) {
+	if (reply) {
+	    var arr = []
+	    for (var i = 0; i < reply.length; i++) {
+		var course = reply[i]
+		var obj = { name : course }
+		db.smembers('course:'+course+':aliases', function(err, r) {
+		    if (r) {
+			obj.aliases = r
+		    } else {
+			obj.aliases = []
+		    }
+		    arr[i-1] = obj	// FUCK JAVASCRIPT! FUCK NODE.JS! FUCK CALLBACK HELL!
+		    if (i == reply.length) {
+			res.send(JSON.stringify(arr))
+		    }
+		})
+	    }
+	} else {
+	    res.send(JSON.stringify([]))
+	}
+    })
+}
+
+exports['new-alias'] = function(req, res) {
+    var name = req.query.name
+    if (!name) {
+	res.status(400).send('Need alias course name')
+	return
+    }
+    var user = res.locals.user
+    var course = req.params.param
+    if (!course) {
+	res.status(400).send('Need course name')
+	return
+    }
+    db.sismember('courses', name, function(err, reply) {
+	if (reply == 1) {
+	    res.status(400).send('Course ' + name + ' exists')
+	} else {
+	    db.sadd('courses', name)
+	    db.sadd('course:'+course+':aliases', name)
+	    db.set('course:'+name+':aliased-to', course)
+	    res.send('Added alias ' + name + ' for course ' + course)
+	}
+    })
+}
+
+exports['del-alias'] = function(req, res) {
+    var name = req.query.name
+    if (!name) {
+	res.status(400).send('Need alias course name')
+	return
+    }
+    var user = res.locals.user
+    var course = req.params.param
+    if (!course) {
+	res.status(400).send('Need course name')
+	return
+    }
+    db.sismember('course:'+course+':aliases', name, function(err, reply) {
+	if (reply == 0) {
+	    res.status(400).send('Course ' + name + ' is not an alias course')
+	} else {
+	    db.srem('courses', name)
+	    db.srem('course:'+course+':aliases', name)
+	    db.del('course:'+name+':aliased-to')
+	    res.send('Deleted alias ' + name + ' for course ' + course)
+	}
     })
 }
 
