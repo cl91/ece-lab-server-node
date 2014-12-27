@@ -1,6 +1,6 @@
 var db = require('redis').createClient()
 
-exports.new = function(req, res) {
+exports['new'] = function(req, res) {
     var name = req.query.name
     if (!name) {
 	res.status(400).send('Need course name')
@@ -13,15 +13,16 @@ exports.new = function(req, res) {
 	    return
 	}
 	db.sadd('courses', name)
-	db.sadd(user+':courses', name)
+	db.sadd('user:'+user+':courses', name)
+	db.sadd('user:'+user+':primary-courses', name)
 	res.send('Added course ' + name)
     })
 }
 
 exports['get'] = function(req, res) {
     var user = res.locals.user
-    db.smembers(user+':courses', function(err, reply) {
-	if (reply) {
+    db.smembers('user:'+user+':primary-courses', function(err, reply) {
+	if (reply.length) {
 	    var arr = []
 	    for (var i = 0; i < reply.length; i++) {
 		var course = reply[i]
@@ -44,6 +45,30 @@ exports['get'] = function(req, res) {
     })
 }
 
+exports['del'] = function(req, res) {
+    var user = res.locals.user
+    var course = req.params.param
+    if (!course) {
+	res.status(400).send('Need course name')
+	return
+    }
+    db.sismember('courses', course, function(err, reply) {
+	if (reply == 1) {
+	    db.sismember('user:'+user+':primary-courses', course, function(err, reply) {
+		if (reply == 1) {
+		    db.srem('courses', course)
+		    db.srem('user:'+user+':courses', course)
+		    db.srem('user:'+user+':primary-courses', course)
+		} else {
+		    res.status(400).send('You are not an admin for course ' + course)
+		}
+	    })
+	} else {
+	    res.status(400).send('Course ' + course + ' does not exist')
+	}
+    })
+}
+
 exports['new-alias'] = function(req, res) {
     var name = req.query.name
     if (!name) {
@@ -61,6 +86,7 @@ exports['new-alias'] = function(req, res) {
 	    res.status(400).send('Course ' + name + ' exists')
 	} else {
 	    db.sadd('courses', name)
+	    db.sadd('user:'+user+':courses', name)
 	    db.sadd('course:'+course+':aliases', name)
 	    db.set('course:'+name+':aliased-to', course)
 	    res.send('Added alias ' + name + ' for course ' + course)
@@ -75,16 +101,13 @@ exports['del-alias'] = function(req, res) {
 	return
     }
     var user = res.locals.user
-    var course = req.params.param
-    if (!course) {
-	res.status(400).send('Need course name')
-	return
-    }
-    db.sismember('course:'+course+':aliases', name, function(err, reply) {
+    db.sismember('course:'+name+':aliased-to', name, function(err, reply) {
 	if (reply == 0) {
 	    res.status(400).send('Course ' + name + ' is not an alias course')
 	} else {
+	    var course = reply
 	    db.srem('courses', name)
+	    db.srem('user:'+user+':courses', name)
 	    db.srem('course:'+course+':aliases', name)
 	    db.del('course:'+name+':aliased-to')
 	    res.send('Deleted alias ' + name + ' for course ' + course)
@@ -219,7 +242,7 @@ exports.auth = function(req, res, failed, success) {
 	if (reply == 1) {
 	    var param = req.params.param
 	    if (param) {
-		db.sismember(user+':courses', param, function(err, reply) {
+		db.sismember('user:'+user+':courses', param, function(err, reply) {
 		    if (reply == 1) {
 			success(req, res)
 		    } else {

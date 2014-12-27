@@ -65,21 +65,23 @@
 		     + '<button class="btn btn-small btn-danger delete-admin" id="delete-'
 		     + name + '">Delete</button>'
 		     html += '<div class="course-list">Courses: '
-		     if (courses[0]) {
+		     if (courses.length) {
 			 html += courses[0].toUpperCase()
-			 for (var i = 1; i < courses.length; i++) {
-			     html += ',' + courses[i].toUpperCase()
+			 if (courses.length > 1) {
+			     for (var h = 1; h < courses.length; h++) {
+				 html += ', ' + courses[h].toUpperCase()
+			     }
 			 }
 		     }
 		     html += '</div></li>'
 		     $('#admin-list').append(html)
-		     $('#delete-'+name).click(function(name) {
+		     $("button[id='delete-"+name+"']").click(function(name) {
 			 return function() {
 			     $.dialog.confirm("Delete Admin",
 					      "<p>Do you really want to delete admin "+name
 					      + "?</p><p>This cannot be reverted.</p>", function() {
 						  $.ajax({
-						      url : 'api/admin/del?name='+name,
+						      url : 'api/admin/del?name='+encodeURI(name),
 						      type : 'POST',
 						      success : function() {
 							  location.reload();
