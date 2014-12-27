@@ -20,6 +20,20 @@ exports['new'] = function(req, res) {
 }
 
 exports['get'] = function(req, res) {
+    function write_course_info(course, obj, arr, i, n) {
+	db.smembers('course:'+course+':aliases', function(err, r) {
+	    if (r) {
+		obj.aliases = r
+	    } else {
+		obj.aliases = []
+	    }
+	    arr[i] = obj
+	    if (i == n-1) {
+		res.send(JSON.stringify(arr))
+	    }
+	})
+    }
+
     var user = res.locals.user
     db.smembers('user:'+user+':primary-courses', function(err, reply) {
 	if (reply.length) {
@@ -27,17 +41,7 @@ exports['get'] = function(req, res) {
 	    for (var i = 0; i < reply.length; i++) {
 		var course = reply[i]
 		var obj = { name : course }
-		db.smembers('course:'+course+':aliases', function(err, r) {
-		    if (r) {
-			obj.aliases = r
-		    } else {
-			obj.aliases = []
-		    }
-		    arr[i-1] = obj	// FUCK JAVASCRIPT! FUCK NODE.JS! FUCK CALLBACK HELL!
-		    if (i == reply.length) {
-			res.send(JSON.stringify(arr))
-		    }
-		})
+		write_course_info(course, obj, arr, i, reply.length)
 	    }
 	} else {
 	    res.send(JSON.stringify([]))
