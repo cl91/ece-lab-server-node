@@ -60,9 +60,17 @@ exports['del'] = function(req, res) {
 	if (reply == 1) {
 	    db.sismember('user:'+user+':primary-courses', course, function(err, reply) {
 		if (reply == 1) {
-		    db.srem('courses', course)
-		    db.srem('user:'+user+':courses', course)
-		    db.srem('user:'+user+':primary-courses', course)
+		    db.smembers('course:'+course+':aliases', function(err, reply) {
+			if (reply.length) {
+			    res.status(400).send('Course ' +
+						 course + ' has aliases. Please delete them first.')
+			} else {
+			    db.srem('courses', course)
+			    db.srem('user:'+user+':courses', course)
+			    db.srem('user:'+user+':primary-courses', course)
+			    res.status(400).send('Course ' + course + ' deleted.')
+			}
+		    })
 		} else {
 		    res.status(400).send('You are not an admin for course ' + course)
 		}

@@ -89,7 +89,7 @@
 						      error : function(jqxhr, status, error) {
 							  $.dialog.alert("Error",
 									 "Failed to delete admin "
-									 +name+": " + error);
+									 +name+": " + jqxhr.responseText);
 						      }
 						  })
 					      })
