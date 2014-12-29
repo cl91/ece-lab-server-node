@@ -149,11 +149,73 @@ exports['new-marker'] = function(req, res) {
     })
     db.sadd('course:'+course+':markers', name, function(err, reply) {
 	if (reply == 1) {
+	    db.srem('course:'+course+':disabled-markers', name)
 	    db.hset('user:'+name, 'type', 'marker')
 	    res.send('Added marker ' + name + ' for course ' + course)
 	} else {
 	    res.status(500).send('Failed to add marker ' + marker + ' for course ' + course)
 	}
+    })
+}
+
+exports['disable-marker'] = function(req, res) {
+    var name = req.query.name
+    if (!name) {
+	res.status(400).send('Need marker name')
+	return
+    }
+    var user = res.locals.user
+    var course = req.params.param
+    if (!course) {
+	res.status(400).send('Need course name')
+	return
+    }
+    db.sismember('course:'+course+':markers', name, function(err, reply) {
+	if (reply == 1) {
+	    db.sadd('course:'+course+':disabled-markers', name)
+	    db.srem('course:'+course+':markers', name)
+	    res.send('Disabled marker ' + name + ' for course ' + course)
+	} else {
+	    res.status(500).send('User ' + marker + ' is not a marker for course ' + course)
+	}
+    })
+}
+
+exports['enable-marker'] = function(req, res) {
+    var name = req.query.name
+    if (!name) {
+	res.status(400).send('Need marker name')
+	return
+    }
+    var user = res.locals.user
+    var course = req.params.param
+    if (!course) {
+	res.status(400).send('Need course name')
+	return
+    }
+    db.sismember('course:'+course+':disabled-markers', name, function(err, reply) {
+	if (reply == 1) {
+	    db.srem('course:'+course+':disabled-markers', name)
+	    db.sadd('course:'+course+':markers', name)
+	    res.send('Enabled marker ' + name + ' for course ' + course)
+	} else {
+	    res.status(500).send('User ' + marker + ' is not a disabled LOL marker for course ' + course)
+	}
+    })
+}
+
+exports['get-markers'] = function(req, res) {
+    var user = res.locals.user
+    var course = req.params.param
+    if (!course) {
+	res.status(400).send('Need course name')
+	return
+    }
+    db.smembers('course:'+course+':markers', function(err, markers) {
+	db.smembers('course:'+course+':disabled-markers', function(err, disabled) {
+	    var obj = { markers : markers, disabled : disabled }
+	    res.send(JSON.stringify(obj))
+	})
     })
 }
 

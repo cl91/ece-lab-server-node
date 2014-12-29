@@ -27,10 +27,10 @@
 		</div>
 		<div id="navbar" class="navbar-collapse collapse">
 		    <ul class="nav navbar-nav">
-			<li><a href="#">Home</a></li>
+			<li><a href="course-coordinator.html">Home</a></li>
 		    </ul>
 		    <ul class="nav navbar-nav navbar-right">
-			<li><a href="#">Logout</a></li>
+			<li><a href="login.html">Logout</a></li>
 		    </ul>
 		</div>
 	    </div>
@@ -38,44 +38,14 @@
 
 	<div class="container">
 
-	    <h1 class="text-center">Edit Markers for COMPSYS 203</h1>
+	    <h1 class="text-center" id="title">Edit Markers</h1>
 
 	    <div class="index-page-body">
 		<div class="lead">
-		    <button class="btn btn-lg btn-primary"
+		    <button class="btn btn-lg btn-primary" id="new-marker"
 			    type="button">Add New Marker</button>
 		</div>
-		<div class="edit-labs-table">
-		    <table class="table table-striped">
-			<thead>
-			    <td>Name</td>
-			    <td>UPI</td>
-			    <td>Active</td>
-			    <td>Edit</td>
-			</thead>
-			<tbody>
-			    <tr>
-				<td>John Smith</td>
-				<td>jsmi273</td>
-				<td>No</td>
-				<td>
-				    <button class="btn btn-primary"
-					    type="button">Edit</button>
-				</td>
-			    </tr>
-
-			    <tr>
-				<td>Alan Green</td>
-				<td>agre471</td>
-				<td>Yes</td>
-				<td>
-				    <button class="btn btn-primary"
-					    type="button">Edit</button>
-				</td>
-			    </tr>
-
-			</tbody>
-		    </table>
+		<div id="edit-markers-table">
 		</div>
 	    </div>
 
@@ -83,5 +53,132 @@
 
 	<script src="js/jquery.min.js"></script>
 	<script src="js/bootstrap.min.js"></script>
+	<script src="js/markup.min.js"></script>
+	<script src="js/jquery.dialog.js"></script>
+
+	<script id="marker-template" type="text/template">
+	    <table class="table table-striped">
+		<thead>
+		    <td>UPI</td>
+		    <td>Active</td>
+		    <td>Edit</td>
+		</thead>
+		<tbody>
+		    {{markers}}
+		    <tr>
+			<td>{{name}}</td>
+			<td>{{active}}</td>
+			<td>
+			    <button class="btn btn-{{button_state}} {{button_class}}"
+				    data-name="{{name}}" type="button">{{button_name}}</button>
+			</td>
+		    </tr>
+		    {{/markers}}
+		</tbody>
+	    </table>
+	</script>
+	
+	<script>
+	 function get_parameter_by_name(name) {
+	     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+	     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+             results = regex.exec(location.search);
+	     return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+	 }
+
+	 var course = get_parameter_by_name('course')
+	 var title = 'Edit Markers for ' + course
+	 $('#title').text(title)
+	 course = course.toLowerCase()
+
+	 $('#marker-template').hide()
+	 var template = document.getElementById("marker-template").firstChild.textContent
+	 $.ajax({
+	     url : 'api/course/'+course+'/get-markers',
+	     type : 'POST',
+	     dataType : 'json',
+	     success : function(data) {
+		 if (data) {
+		     var obj = { markers : [], course : course }
+		     if (data.markers) {
+			 for (var i = 0; i < data.markers.length; i++) {
+			     obj.markers[obj.markers.length++] = { name : data.markers[i],
+								   active : "Yes",
+								   button_state : "danger",
+								   button_class : "disable-marker",
+								   button_name : "Disable" }
+			 }
+		     }
+		     if (data.disabled) {
+			 for (var i = 0; i < data.disabled.length; i++) {
+			     obj.markers[obj.markers.length++] = { name : data.disabled[i],
+								   active : "No",
+								   button_state : "primary",
+								   button_class : "enable-marker",
+								   button_name : "Enable" }
+			 }
+		     }
+		     $('#edit-markers-table').html(Mark.up(template, obj))
+
+		     $('.disable-marker').click(function() {
+			 var name = $(this).data('name')
+			 $.dialog.confirm("Disable Marker",
+					  "<p>Do you really want to delete marker "+name
+					  + " for course " + course.toUpperCase() + "?<p>",
+					  function() {
+					      $.ajax({
+						  url : 'api/course/'+course+'/disable-marker?name=' +
+						     encodeURI(name),
+						  type : 'POST',
+						  success : function() {
+						      location.reload();
+						  },
+						  error : function(jqxhr, status, error) {
+						      $.dialog.alert("Error",
+								     "Failed to disable marker "
+								     +name+": " + jqxhr.responseText);
+						  }
+					      })
+					  })
+		     })
+
+		     $('.enable-marker').click(function() {
+			 var name = $(this).data('name')
+			 $.dialog.confirm("Enable Marker",
+					  "<p>Do you really want to enable marker "+name
+					  + " for course " + course.toUpperCase() + "?<p>",
+					  function() {
+					      $.ajax({
+						  url : 'api/course/'+course+'/enable-marker?name=' +
+						     encodeURI(name),
+						  type : 'POST',
+						  success : function() {
+						      location.reload();
+						  },
+						  error : function(jqxhr, status, error) {
+						      $.dialog.alert("Error",
+								     "Failed to enable marker "
+								     +name+": " + jqxhr.responseText);
+						  }
+					      })
+					  })
+		     })
+		 }
+	     },
+	     error : function(jqxhr, status, error) {
+		 if (error) {
+		     if (error == "Unauthorized") {
+			 document.location = "login.html"
+		     }
+		 }
+		 $('#error').text('Failed to get marker info: ' + jqxhr.responseText)
+	     }
+	 })
+
+	 $('#new-marker').click(function() {
+	     document.location = "new-marker.html?course="+course
+	 })
+	</script>
+
     </body>
 </html>

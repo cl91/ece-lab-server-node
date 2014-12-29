@@ -57,11 +57,11 @@
 		    {{title}}
 		</div>
 		<div class="course-info">
-		    <button class="btn btn-lg btn-primary"
+		    <button class="btn btn-lg btn-primary edit-labs" data-course="{{name}}"
 			    type="button">Edit Labs</button>
 		</div>
 		<div class="course-info">
-		    <button class="btn btn-lg btn-primary"
+		    <button class="btn btn-lg btn-primary edit-markers" data-course="{{name}}"
 			    type="button">Edit Markers</button>
 		</div>
 		<div class="course-info">
@@ -170,6 +170,14 @@
 						  }
 					      })
 					  })
+		     })
+		     $('.edit-labs').click(function() {
+			 var course = $(this).data('course')
+			 document.location = 'edit-labs.html?course=' + course
+		     })
+		     $('.edit-markers').click(function() {
+			 var course = $(this).data('course')
+			 document.location = 'edit-markers.html?course=' + course
 		     })
 		 }
 	     },

@@ -27,10 +27,10 @@
 		</div>
 		<div id="navbar" class="navbar-collapse collapse">
 		    <ul class="nav navbar-nav">
-			<li><a href="#">Home</a></li>
+			<li><a href="course-coordinator.html">Home</a></li>
 		    </ul>
 		    <ul class="nav navbar-nav navbar-right">
-			<li><a href="#">Logout</a></li>
+			<li><a href="login.html">Logout</a></li>
 		    </ul>
 		</div>
 	    </div>
@@ -38,7 +38,7 @@
 
 	<div class="container">
 
-	    <h1 class="text-center">Edit Labs for COMPSYS 203</h1>
+	    <h1 class="text-center" id="title">Edit Labs</h1>
 
 	    <div class="index-page-body">
 		<div class="lead">
@@ -111,5 +111,20 @@
 
 	<script src="js/jquery.min.js"></script>
 	<script src="js/bootstrap.min.js"></script>
+
+	<script>
+	 function get_parameter_by_name(name) {
+	     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+	     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+             results = regex.exec(location.search);
+	     return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+	 }
+
+	 var course = get_parameter_by_name('course')
+	 var title = 'Edit Labs for ' + course
+	 $('#title').text(title)
+	</script>
+
+    </body>
     </body>
 </html>
